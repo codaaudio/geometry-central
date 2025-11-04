@@ -1,7 +1,7 @@
 #include "geometrycentral/surface/simple_polygon_mesh.h"
 
 #include "happly.h"
-#include "nanort/nanort.h"
+#include "nanort.h"
 
 #include <algorithm>
 #include <deque>
@@ -656,9 +656,7 @@ void SimplePolygonMesh::consistentlyOrientFaces(bool outwardOrient) {
   int32_t N_RAYS_PER_FACE = 4;
   std::vector<double> rawPositions;
   std::vector<unsigned int> rawFaces;
-  nanort::BVHAccel<double, nanort::TriangleMesh<double>, nanort::TriangleSAHPred<double>,
-                   nanort::TriangleIntersector<double>>
-      accel;
+  nanort::BVHAccel<double> accel;
   double lengthScale = -1;
   auto traceDist = [&](Vector3 root, Vector3 dir) {
     nanort::Ray<double> ray;
@@ -668,8 +666,9 @@ void SimplePolygonMesh::consistentlyOrientFaces(bool outwardOrient) {
     for (int i = 0; i < 3; i++) ray.dir[i] = dir[i];
     nanort::BVHTraceOptions trace_options;
     nanort::TriangleIntersector<double> triangle_intersector(rawPositions.data(), rawFaces.data(), sizeof(double) * 3);
-    bool hit = accel.Traverse(ray, trace_options, triangle_intersector);
-    return triangle_intersector.intersection.t;
+    nanort::TriangleIntersection<double> isect;
+    bool hit = accel.Traverse(ray, triangle_intersector, &isect);
+    return isect.t;
   };
   std::random_device rd;
   std::mt19937 gen(rd()); // we'll use this to generate rays on triangles
@@ -699,8 +698,7 @@ void SimplePolygonMesh::consistentlyOrientFaces(bool outwardOrient) {
 
     nanort::TriangleMesh<double> nanortMesh(rawPositions.data(), rawFaces.data(), sizeof(double) * 3);
     nanort::TriangleSAHPred<double> nanortMeshPred(rawPositions.data(), rawFaces.data(), sizeof(double) * 3);
-    nanort::BVHBuildOptions<double> options; // Use default options
-    bool ret = accel.Build(nFaces(), options, nanortMesh, nanortMeshPred);
+    bool ret = accel.Build(nFaces(), nanortMesh, nanortMeshPred);
     if (!ret) {
       throw std::runtime_error("BVH construction failed");
     }
