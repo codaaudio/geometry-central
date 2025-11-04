@@ -10,3 +10,6 @@ class GeometryCentralRecipe(ConanFile):
         self.requires("nanoflann/[^1.6.0]")
         self.requires("nanort/cci.20251104")
         self.requires("happly/cci.20200822")
+
+    def build_requirements(self):
+        self.test_requires("gtest/1.17.0")

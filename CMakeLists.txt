@@ -5,16 +5,21 @@ project(geometry-central)
 
 # Options
 option(BUILD_SHARED_LIBS "Build the shared library" FALSE)
+option(WITH_SUITESPARSE "Enable SuiteSparse." OFF)
+option(GEOMETRY_CENTRAL_BUILD_TESTS "Build tests" OFF)
+
+
 if(BUILD_SHARED_LIBS)
     message("-- Building SHARED libraries")
 else()
     message("-- Building STATIC libraries")
 endif()
 
-option(WITH_SUITESPARSE "Enable SuiteSparse." OFF)
+
 if (WITH_SUITESPARSE)
   message(FATAL_ERROR "SuiteSparse currently not supported!")
 endif()
+
 
 
 find_package(Eigen3 REQUIRED)
@@ -41,6 +46,12 @@ target_compile_features(geometry-central PUBLIC cxx_std_11)
 target_compile_definitions(geometry-central PUBLIC NOMINMAX _USE_MATH_DEFINES)
 
 add_subdirectory(src)
+
+if(GEOMETRY_CENTRAL_BUILD_TESTS)
+    message(STATUS "Testing is enabled!")
+    enable_testing()
+    add_subdirectory(test)
+endif()
 
 install(
     TARGETS 
